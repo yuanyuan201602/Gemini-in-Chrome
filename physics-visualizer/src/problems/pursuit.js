@@ -69,18 +69,20 @@ export function createPursuitProblem({ id = 'pursuit-gen', tab = '追及问题',
     scene.add(lead, chaser);
     const hL = HEIGHT[leadKind], hC = HEIGHT[chaserKind];
 
+    const CHASER_LBL_Y = hC + 2.0;
+    const LEAD_LBL_Y = Math.max(hL + 1.7, CHASER_LBL_Y + 1.3);
     const leadLbl = label('', 'truck');
-    leadLbl.position.set(-lead.userData.length / 2, hL + 1.7, 0);
+    leadLbl.position.set(-lead.userData.length / 2, LEAD_LBL_Y, 0);
     lead.add(leadLbl);
     const chaserLbl = label('', 'police');
-    chaserLbl.position.set(-chaser.userData.length / 2, hC + 2.0, 0);
+    chaserLbl.position.set(-chaser.userData.length / 2, CHASER_LBL_Y, 0);
     chaser.add(chaserLbl);
 
     const vLeadArrow = new FatArrow(0xff9a3c, 0.09);
     const vChaserArrow = new FatArrow(0x4f9dff, 0.09);
     scene.add(vLeadArrow, vChaserArrow);
 
-    const GAP_Y = Math.max(hL, hC) + 2.8;
+    const GAP_Y = LEAD_LBL_Y + 1.1;
     const gap = new THREE.Group();
     const gapMat = new THREE.MeshBasicMaterial({ color: 0xffb547 });
     const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 1, 8), gapMat);
@@ -136,7 +138,7 @@ export function createPursuitProblem({ id = 'pursuit-gen', tab = '追及问题',
       },
       summary: (t) => {
         const x = (xLead(t) + xChaser(t)) / 2;
-        const w = Math.max(42, xCatch * 0.3);
+        const w = 16 + xCatch * 0.22;
         return { pos: new THREE.Vector3(x - 14, w * 0.48, w), target: new THREE.Vector3(x + 2, 0, 2) };
       },
     };
@@ -185,10 +187,11 @@ export function createPursuitProblem({ id = 'pursuit-gen', tab = '追及问题',
       eventLbl.visible = true;
       catchRing.visible = caught;
       if (mark === 'max_gap' || mark === 'trap') {
-        eventLbl.position.set(xc - 2, GAP_Y + 2.6, 3.5);
+        eventLbl.position.set(xc + Math.min(d / 2, 8), GAP_Y + 2.6, 3.5);
         eventLbl.el.innerHTML = mark === 'max_gap' ? `速度相等 ⇒ 距离最大 ${num(gapMax)} m` : '⚠ 直接列方程？先检查速度！';
       } else if (caught) {
-        eventLbl.position.set(xCatch, GAP_Y + 0.3, 3.5);
+        if (mark === 'summary') eventLbl.position.set(xCatch, GAP_Y + 0.3, 3.5);
+        else eventLbl.position.set(xCatch + 1.5, 0.4, 5.8);
         eventLbl.el.innerHTML = `追上！ t = ${num(tCatch)} s，x = ${num(xCatch)} m`;
         catchRing.material.opacity = 0.5 + 0.4 * Math.sin(performance.now() / 180);
       } else if (mark === 'accel_to_vmax' && t >= T_CAP - 1e-3) {
@@ -234,7 +237,7 @@ export function createPursuitProblem({ id = 'pursuit-gen', tab = '追及问题',
       if (mark === 'summary') {
         pv.fillBetween(pv.sample(vChaser, 0, tc, 120), [[0, 0], [tc, 0]], 'rgba(79,157,255,0.28)');
         pv.fillBetween(pv.sample(vLead, 0, tc, 2), [[0, 0], [tc, 0]], 'rgba(255,154,60,0.22)');
-        if (t >= T_CATCH - 1e-3) pv.text(TOTAL / 2, vTop * 0.12, `S${CHASER[0]} = S${LEAD[0]} = ${num(xCatch)} m`, { color: '#fff', bold: true, align: 'center', bg: 'rgba(0,0,0,.55)' });
+        if (t >= T_CATCH - 1e-3) pv.text(TOTAL / 2, vTop * 0.12, `S${CHASER} = S${LEAD} = ${num(xCatch)} m`, { color: '#fff', bold: true, align: 'center', bg: 'rgba(0,0,0,.55)' });
       }
       if (t > 0) {
         pv.polyline(pv.sample(vLead, 0, tc, 2), { color: ORANGE, width: 2.5 });

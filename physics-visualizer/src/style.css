@@ -162,6 +162,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
 .solve-page button.primary:disabled { opacity: .5; cursor: wait; }
 .solve-msg { color: var(--muted); font-size: 14px; }
 .solve-result { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.solve-result[hidden], .solve-page [hidden] { display: none; }
 .result-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .result-head #result-summary { flex: 1; font-size: 15px; }
 .badge { font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 6px; }

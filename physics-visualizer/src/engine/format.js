@@ -5,6 +5,11 @@ export function num(x, digits = 2) {
   return String(Object.is(r, -0) ? 0 : r);
 }
 
+export function sig(x, n = 3) {
+  if (!Number.isFinite(x) || x === 0) return num(x);
+  return String(Number(x.toPrecision(n)));
+}
+
 // Scientific notation for LaTeX, e.g. 6.28\times10^{-7}
 export function sci(x, digits = 2) {
   if (x === 0) return '0';
@@ -43,8 +48,13 @@ export function escapeHtml(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 }
 
+const supText = (e) => [...String(e)].map((c) => SUP[c]).join('');
+const pretty = (s) => escapeHtml(s)
+  .replace(/(\d)e(-?\d+)/g, (_, d, e) => `${d}×10${supText(e)}`)
+  .replace(/\^(-?\d+)/g, (_, e) => supText(e));
+
 export function statementHtml(pre) {
-  const stem = `<p>${escapeHtml(pre.stem)}</p>`;
-  const qs = pre.questions.map((q) => `<div class="q">${escapeHtml(q)}</div>`).join('');
+  const stem = `<p>${pretty(pre.stem)}</p>`;
+  const qs = pre.questions.map((q) => `<div class="q">${pretty(q)}</div>`).join('');
   return stem + qs;
 }

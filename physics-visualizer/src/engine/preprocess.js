@@ -6,7 +6,7 @@ const SUP = { '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4', '⁵': '5
 
 export function normalize(text) {
   let s = String(text)
-    .replace(/[\uff01-\uff5e]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+    .replace(/[\uff10-\uff19\uff21-\uff3a\uff41-\uff5a\uff0b\uff0d\uff0e\uff0f\uff1d]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
     .replace(/\u3000/g, ' ')
     .replace(/[“”]/g, '"');
   // 10⁶ → 10^6, m/s² → m/s^2
@@ -88,7 +88,7 @@ export function extractQuantities(text) {
 }
 
 export function splitQuestions(text) {
-  const parts = text.split(/(?=\(\s*\d+\s*\)|[①②③④⑤])/);
+  const parts = text.split(/(?=[(（]\s*\d+\s*[)）]|[①②③④⑤])/);
   const stem = parts[0].trim();
   const questions = parts.slice(1).map((p) => p.trim()).filter(Boolean);
   return { stem, questions };

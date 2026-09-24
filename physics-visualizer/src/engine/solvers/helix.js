@@ -1,4 +1,4 @@
-import { num, sci, sciSay, lengthUnit } from '../format.js';
+import { num, sig, sci, sciSay, lengthUnit } from '../format.js';
 
 // Template: a charged particle enters a uniform magnetic field with its velocity at angle θ
 // to B (0° < θ < 90°) and moves on a helix. Optional screen distance L along B.
@@ -51,7 +51,7 @@ export function helixChecks(params, d) {
   ];
 }
 
-const cm = (x, u) => `${num(x * u.f, 3)}\\,\\text{${u.unit}}`;
+const cm = (x, u) => `${sig(x * u.f)}\\,\\text{${u.unit}}`;
 
 export function helixScript(params, d) {
   const kind = PARTICLES[params.particle] || PARTICLES.positive;
@@ -86,7 +86,7 @@ export function helixScript(params, d) {
 
   steps.push({
     mark: 'perp_circle', title: '垂直于 B：匀速圆周运动', t0: 0, t1: P,
-    say: `现在沿着磁场方向看过去。在垂直于磁场的平面里，洛伦兹力提供向心力，${who}做匀速圆周运动。半径约${num(r * ur.f, 3)}${ur.say}，周期约${sciSay(T)}秒。注意，周期和速度大小无关。`,
+    say: `现在沿着磁场方向看过去。在垂直于磁场的平面里，洛伦兹力提供向心力，${who}做匀速圆周运动。半径约${sig(r * ur.f)}${ur.say}，周期约${sciSay(T)}秒。注意，周期和速度大小无关。`,
     math: [
       { tex: 'qv_{\\perp}B=m\\dfrac{v_{\\perp}^2}{r}' },
       { tex: `r=\\dfrac{mv_{\\perp}}{qB}=\\dfrac{${sci(vPerp)}}{${sci(qm)}\\times${sci(B)}}\\approx${cm(r, ur)}`, cls: 'result' },
@@ -106,7 +106,7 @@ export function helixScript(params, d) {
 
   steps.push({
     mark: 'helix', title: '合成：等距螺旋线', t0: 0, t1: P,
-    say: `把两个分运动合起来，${who}一边转圈，一边匀速前进，轨迹就是一条等距螺旋线。转一圈的时间里前进的距离叫做螺距，约${num(pitch * up.f, 3)}${up.say}。`,
+    say: `把两个分运动合起来，${who}一边转圈，一边匀速前进，轨迹就是一条等距螺旋线。转一圈的时间里前进的距离叫做螺距，约${sig(pitch * up.f)}${up.say}。`,
     math: [
       { text: '圆周运动 + 匀速直线运动 ⇒ <b>等距螺旋线</b>' },
       { tex: `p=v_{\\parallel}T=${sci(vPar)}\\times${sci(T)}\\approx${cm(pitch, up)}`, cls: 'result' },
@@ -119,8 +119,8 @@ export function helixScript(params, d) {
     steps.push({
       mark: 'screen', title: onAxis ? `打在屏上：第 ${n} 圈回到轴线` : '打在屏上：是否回到轴线？', t0: 0, t1: P * nScreen, rate: Math.max(1, nScreen),
       say: onAxis
-        ? `屏到出发点的距离是${num(L * up.f, 3)}${up.say}，正好是螺距的${n}倍，所以${who}转完${n}圈时恰好回到 z 轴，打在屏与轴的交点上。`
-        : `屏到出发点的距离是${num(L * up.f, 3)}${up.say}，是螺距的${num(nScreen, 2)}倍，不是整数倍，所以${who}打到屏上时不在 z 轴上。`,
+        ? `屏到出发点的距离是${sig(L * up.f)}${up.say}，正好是螺距的${n}倍，所以${who}转完${n}圈时恰好回到 z 轴，打在屏与轴的交点上。`
+        : `屏到出发点的距离是${sig(L * up.f)}${up.say}，是螺距的${num(nScreen, 2)}倍，不是整数倍，所以${who}打到屏上时不在 z 轴上。`,
       math: [
         { text: '每经过一个周期 T，粒子重新回到 z 轴上。' },
         { tex: `\\dfrac{L}{p}=\\dfrac{${cm(L, up)}}{${cm(pitch, up)}}\\approx${num(nScreen, 2)}`, cls: onAxis ? 'result' : 'warn' },
@@ -133,7 +133,7 @@ export function helixScript(params, d) {
       say: `每转完整一圈，${who}在垂直平面内就回到出发点，也就是重新回到 z 轴上。所以荧光屏到出发点的距离，必须是螺距的整数倍。`,
       math: [
         { text: '每经过一个周期 T，粒子重新回到 z 轴上。' },
-        { tex: `L=np\\approx${num(pitch * up.f, 3)}n\\ \\text{${up.unit}}\\quad(n=1,2,3,\\dots)`, cls: 'result' },
+        { tex: `L=np\\approx${sig(pitch * up.f)}n\\ \\text{${up.unit}}\\quad(n=1,2,3,\\dots)`, cls: 'result' },
       ],
     });
   }

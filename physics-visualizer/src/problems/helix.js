@@ -4,7 +4,7 @@ import { label, FatArrow, canvasTexture } from '../core/stage.js';
 import { niceStep, niceTicks } from '../core/plot.js';
 import { buildLab, glowSprite, TUBE_R, PSU_POS } from '../models/lab.js';
 import { solveHelix, helixScript, PARTICLES, SEC_PER_PERIOD } from '../engine/solvers/helix.js';
-import { num, lengthUnit } from '../engine/format.js';
+import { num, sig, lengthUnit } from '../engine/format.js';
 
 const BEAM_COLORS = [0xff6b6b, 0xffb347, 0xffe156, 0x7be07b, 0x4fd1ff, 0x6c8cff, 0xc77dff, 0xff7ac8];
 const SUP = { '-': '⁻', 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' };
@@ -190,7 +190,7 @@ export function createHelixProblem({ id = 'helix-gen', tab = '磁场 · 螺旋�
     const center = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 12), new THREE.MeshBasicMaterial({ color: 0xffffff }));
     center.position.set(0, CY, 0);
     scene.add(center);
-    const rText = `r ≈ ${num(R * ur.f, 3)} ${ur.unit}`;
+    const rText = `r ≈ ${sig(R * ur.f)} ${ur.unit}`;
     const rLbl = label(rText, 'vec');
     rLbl.center.set(0.5, 0.5);
     scene.add(rLbl);
@@ -237,7 +237,7 @@ export function createHelixProblem({ id = 'helix-gen', tab = '磁场 · 螺旋�
     const pc0 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.6, 0.05), pMat);
     const pc1 = pc0.clone();
     pc1.position.z = P_W;
-    const pText = `螺距 p ≈ ${num(P * up.f, 3)} ${up.unit}`;
+    const pText = `螺距 p ≈ ${sig(P * up.f)} ${up.unit}`;
     const pLbl2 = label(pText, 'gap big');
     pLbl2.position.set(0, -0.2, P_W / 2);
     pitch.add(pBar, pc0, pc1, pLbl2);
@@ -346,7 +346,7 @@ export function createHelixProblem({ id = 'helix-gen', tab = '磁场 · 螺旋�
 
       ruler.visible = mark === 'par_line' || mark === 'helix';
       ghostZ.position.set(RULER_X, RULER_Y + 0.45, o.z);
-      zLbl.el.textContent = `z = ${num((o.z / zU) * up.f, 3)} ${up.unit}`;
+      zLbl.el.textContent = `z = ${sig((o.z / zU) * up.f)} ${up.unit}`;
 
       pitch.visible = !['intro', 'decompose', 'perp_circle', 'par_line', 'focus'].includes(mark);
       axisLine.visible = ['screen', 'focus', 'summary'].includes(mark);
@@ -425,12 +425,12 @@ export function createHelixProblem({ id = 'helix-gen', tab = '磁场 · 螺旋�
         if (!['decompose', 'perp_circle', 'par_line'].includes(mark)) {
           pb.vline(T * tf, 'rgba(56,211,159,.6)');
           pb.hline(P * up.f, 'rgba(56,211,159,.6)');
-          pb.text(T * tf, zTop * 0.06, ` T ≈ ${num(T * tf, 3)}`, { color: '#38d39f' });
-          pb.text(tEnd * tf * 0.03, P * up.f + zTop * 0.02, `p ≈ ${num(P * up.f, 3)} ${up.unit}`, { color: '#38d39f' });
+          pb.text(T * tf, zTop * 0.06, ` T ≈ ${sig(T * tf)}`, { color: '#38d39f' });
+          pb.text(tEnd * tf * 0.03, P * up.f + zTop * 0.02, `p ≈ ${sig(P * up.f)} ${up.unit}`, { color: '#38d39f' });
         }
         if (mark === 'screen' && params.L !== null) {
           pb.hline(params.L * up.f, 'rgba(255,209,102,.7)');
-          pb.text(tEnd * tf * 0.03, params.L * up.f + zTop * 0.02, `屏 L = ${num(params.L * up.f, 3)} ${up.unit}`, { color: '#ffd166' });
+          pb.text(tEnd * tf * 0.03, params.L * up.f + zTop * 0.02, `屏 L = ${sig(params.L * up.f)} ${up.unit}`, { color: '#ffd166' });
         }
       }
       pb.end();
