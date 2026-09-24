@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>情境化可视化解题</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='%234f9dff'/></svg>" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="brand">情境化 · 可视化解题</div>
+        <nav id="problem-tabs" class="tabs"></nav>
+        <div class="top-actions">
+          <label class="toggle"><input type="checkbox" id="voice-toggle" checked /> 语音讲解</label>
+          <label class="toggle"><input type="checkbox" id="auto-toggle" /> 自动连播</label>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="stage-col">
+          <div class="stage">
+            <div id="viewport"></div>
+            <div id="hud" class="hud"></div>
+            <div id="subtitle" class="subtitle"></div>
+            <div class="stage-hint">拖动旋转 · 滚轮缩放 · 右键平移</div>
+          </div>
+          <div class="graphs">
+            <div class="graph-box"><canvas id="graph-a"></canvas></div>
+            <div class="graph-box"><canvas id="graph-b"></canvas></div>
+          </div>
+        </section>
+
+        <aside class="panel">
+          <details class="card statement" open>
+            <summary>题目</summary>
+            <div id="statement"></div>
+          </details>
+          <div class="card">
+            <div class="card-title">解题步骤</div>
+            <ol id="step-list" class="step-list"></ol>
+          </div>
+          <div class="card">
+            <div class="card-title" id="math-title">方程与推导</div>
+            <div id="math" class="math"></div>
+          </div>
+        </aside>
+      </main>
+
+      <footer class="controls">
+        <button id="btn-prev" title="上一步 (←)">◀ 上一步</button>
+        <button id="btn-play" class="primary" title="播放/暂停 (空格)">▶ 播放</button>
+        <button id="btn-next" title="下一步 (→)">下一步 ▶</button>
+        <button id="btn-replay" title="重播本步 (R)">↺ 重播本步</button>
+        <input id="scrub" type="range" min="0" max="1000" value="0" />
+        <span id="time-label" class="time-label"></span>
+        <label class="speed">速度
+          <select id="speed">
+            <option value="0.5">0.5×</option>
+            <option value="1" selected>1×</option>
+            <option value="1.5">1.5×</option>
+            <option value="2">2×</option>
+          </select>
+        </label>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
