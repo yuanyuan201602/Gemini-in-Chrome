@@ -17,6 +17,33 @@
         </div>
       </header>
 
+      <section id="solve-page" class="solve-page" hidden>
+        <div class="solve-wrap">
+          <div class="solve-head">
+            <h1>输入一道题，生成可视化讲解</h1>
+            <span id="engine-status" class="engine-status">检测判断引擎…</span>
+          </div>
+          <textarea id="problem-input" rows="7" placeholder="把题目粘贴或输入到这里（支持 m/s²、km/h、×10⁶ 等写法）"></textarea>
+          <div class="samples"><span>试试这些：</span><div id="sample-list"></div></div>
+          <div class="solve-actions">
+            <button id="btn-solve" class="primary">生成解题 ▶</button>
+            <span id="solve-msg" class="solve-msg"></span>
+          </div>
+          <div id="solve-result" class="solve-result" hidden>
+            <div class="result-head">
+              <span id="route-badge" class="badge"></span>
+              <span id="result-summary"></span>
+              <button id="btn-launch" class="primary">开始讲解 ▶</button>
+            </div>
+            <div id="result-body"></div>
+            <details class="trace">
+              <summary>流程追踪（教师视图）</summary>
+              <ol id="trace-list"></ol>
+            </details>
+          </div>
+        </div>
+      </section>
+
       <main class="layout">
         <section class="stage-col">
           <div class="stage">

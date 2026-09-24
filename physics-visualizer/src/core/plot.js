@@ -1,4 +1,19 @@
 // Lightweight 2D plotting on canvas, redrawn every frame in sync with the animation.
+
+export function niceStep(span, count = 6) {
+  const raw = span / count;
+  const p = 10 ** Math.floor(Math.log10(raw));
+  const m = raw / p;
+  return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p;
+}
+
+export function niceTicks(min, max, count = 6) {
+  const step = niceStep(max - min, count);
+  const out = [];
+  for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) out.push(Number(v.toPrecision(10)));
+  return out;
+}
+
 export class Plot {
   constructor(canvas, opts) {
     this.canvas = canvas;

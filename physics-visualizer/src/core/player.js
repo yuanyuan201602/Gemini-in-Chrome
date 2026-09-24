@@ -144,7 +144,7 @@ export class Player {
       this.updateButtons();
     };
     window.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName) || !this.problem || this.suspended) return;
       if (e.code === 'Space') { e.preventDefault(); this.togglePlay(); }
       if (e.code === 'ArrowRight') this.goto(this.index + 1, true);
       if (e.code === 'ArrowLeft') this.goto(this.index - 1, true);
@@ -155,7 +155,7 @@ export class Player {
   loop(now) {
     const dt = Math.min(0.05, (now - this.last) / 1000);
     this.last = now;
-    if (this.problem) {
+    if (this.problem && !this.suspended) {
       const step = this.problem.steps[this.index];
       if (this.playing) {
         this.t += dt * this.speed * (step.rate || 1);

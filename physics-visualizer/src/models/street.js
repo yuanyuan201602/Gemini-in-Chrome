@@ -125,7 +125,7 @@ function distanceSign(meters) {
   return g;
 }
 
-export function buildStreet(scene, { x0 = -120, x1 = 300 } = {}) {
+export function buildStreet(scene, { x0 = -120, x1 = 300, signStep = 20, signMax = 160 } = {}) {
   const len = x1 - x0;
   const cx = (x0 + x1) / 2;
 
@@ -234,7 +234,7 @@ export function buildStreet(scene, { x0 = -120, x1 = 300 } = {}) {
     scene.add(l2);
   }
 
-  for (let m = 0; m <= 160; m += 20) {
+  for (let m = 0; m <= signMax + 1e-9; m += signStep) {
     const s = distanceSign(m);
     s.position.set(m, 0.2, 7.5);
     scene.add(s);

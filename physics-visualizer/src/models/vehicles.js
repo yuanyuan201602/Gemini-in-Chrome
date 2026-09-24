@@ -130,9 +130,13 @@ export function createTruck() {
 }
 
 export function createPoliceCar() {
+  return createCar({ police: true });
+}
+
+export function createCar({ police = false, color = 0xc8302e } = {}) {
   const g = new THREE.Group();
-  const white = std(0xf5f7fa, { metalness: 0.35, roughness: 0.3 });
-  const blue = std(0x1c47c9, { metalness: 0.3, roughness: 0.35 });
+  const white = police ? std(0xf5f7fa, { metalness: 0.35, roughness: 0.3 }) : std(color, { metalness: 0.45, roughness: 0.3 });
+  const blue = police ? std(0x1c47c9, { metalness: 0.3, roughness: 0.35 }) : std(0x2a2d33, { metalness: 0.5, roughness: 0.4 });
   const dark = std(0x1d2024, { roughness: 0.7 });
 
   g.add(mesh(rbox(4.8, 0.72, 1.9, 0.26), white, -2.4, 0.72, 0));
@@ -147,6 +151,10 @@ export function createPoliceCar() {
   g.add(mesh(new THREE.BoxGeometry(0.04, 0.16, 0.9), std(0x111111), 0.12, 0.85, 0, false));
   lightPair(g, 0.02, 0.9, 0.68, 0xfff6e0, [0.06, 0.14, 0.34], 3);
   lightPair(g, -4.82, 0.9, 0.72, 0xff2020, [0.05, 0.12, 0.3], 1.6);
+  for (const z of [0.98, -0.98]) g.add(mesh(new THREE.BoxGeometry(0.2, 0.12, 0.14), white, -1.35, 1.2, z));
+  g.userData.wheels = addWheels(g, 0.36, 0.26, [-0.95, -3.85], 0.8);
+  g.userData.length = 4.8;
+  if (!police) return g;
 
   const decal = canvasTexture(512, 128, (c, w, h) => {
     c.clearRect(0, 0, w, h);
@@ -177,20 +185,138 @@ export function createPoliceCar() {
   bluLight.position.set(-2.35, 2.3, -0.6);
   g.add(redLight, bluLight);
   g.userData.siren = { red, blu, redLight, bluLight };
+  return g;
+}
 
-  for (const z of [0.98, -0.98]) g.add(mesh(new THREE.BoxGeometry(0.2, 0.12, 0.14), white, -1.35, 1.2, z));
+function thinWheel(radius, tube, spokes) {
+  const pivot = new THREE.Group();
+  const tire = new THREE.Mesh(new THREE.TorusGeometry(radius, tube, 10, 36), std(0x141414, { roughness: 0.9 }));
+  tire.castShadow = true;
+  pivot.add(tire);
+  const spokeMat = std(0xb8bcc2, { metalness: 0.8, roughness: 0.3 });
+  for (let k = 0; k < spokes; k++) {
+    const s = new THREE.Mesh(new THREE.BoxGeometry(radius * 2, 0.015, 0.015), spokeMat);
+    s.rotation.z = (k * Math.PI) / spokes;
+    pivot.add(s);
+  }
+  pivot.add(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.1, 10).rotateX(Math.PI / 2), spokeMat));
+  pivot.userData.radius = radius;
+  return pivot;
+}
 
-  g.userData.wheels = addWheels(g, 0.36, 0.26, [-0.95, -3.85], 0.8);
-  g.userData.length = 4.8;
+const rod = (a, b, r, mat) => {
+  const va = new THREE.Vector3(...a), vb = new THREE.Vector3(...b);
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, va.distanceTo(vb), 8), mat);
+  m.position.copy(va).add(vb).multiplyScalar(0.5);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), vb.clone().sub(va).normalize());
+  m.castShadow = true;
+  return m;
+};
+
+// A seated or standing figure; legs are pivots so they can swing.
+function rider(shirt, { seated = true, helmet = null } = {}) {
+  const g = new THREE.Group();
+  const skin = std(0xf0c7a0, { roughness: 0.8 });
+  const pants = std(0x2d3a55, { roughness: 0.8 });
+  const torso = mesh(new THREE.CapsuleGeometry(0.2, 0.45, 4, 10), std(shirt, { roughness: 0.7 }), 0, 0.45, 0);
+  if (seated) torso.rotation.z = -0.35;
+  g.add(torso);
+  const head = mesh(new THREE.SphereGeometry(0.15, 16, 12), skin, seated ? 0.14 : 0, 0.92, 0);
+  g.add(head);
+  if (helmet !== null) g.add(mesh(new THREE.SphereGeometry(0.18, 16, 10, 0, Math.PI * 2, 0, Math.PI / 1.8), std(helmet, { metalness: 0.3, roughness: 0.3 }), seated ? 0.14 : 0, 0.95, 0));
+  const legs = [];
+  for (const z of [0.1, -0.1]) {
+    const hip = new THREE.Group();
+    hip.position.set(0, 0.12, z);
+    hip.add(mesh(new THREE.CapsuleGeometry(0.075, 0.6, 4, 8), pants, 0, -0.35, 0));
+    g.add(hip);
+    legs.push(hip);
+  }
+  for (const z of [0.24, -0.24]) {
+    const arm = mesh(new THREE.CapsuleGeometry(0.06, 0.45, 4, 8), std(shirt, { roughness: 0.7 }), seated ? 0.25 : 0, 0.5, z);
+    arm.rotation.z = seated ? -1.0 : 0;
+    g.add(arm);
+  }
+  g.userData.legs = legs;
+  return g;
+}
+
+export function createCyclist() {
+  const g = new THREE.Group();
+  const frameMat = std(0x1fa37a, { metalness: 0.5, roughness: 0.35 });
+  const R = 0.34;
+  const front = thinWheel(R, 0.03, 8), back = thinWheel(R, 0.03, 8);
+  front.position.set(-0.4, R, 0);
+  back.position.set(-1.45, R, 0);
+  g.add(front, back);
+  g.add(rod([-1.45, R, 0], [-0.95, R, 0], 0.025, frameMat));
+  g.add(rod([-0.95, R, 0], [-1.1, 0.95, 0], 0.03, frameMat));
+  g.add(rod([-1.1, 0.95, 0], [-0.55, 0.95, 0], 0.03, frameMat));
+  g.add(rod([-0.55, 0.95, 0], [-0.95, R, 0], 0.03, frameMat));
+  g.add(rod([-1.45, R, 0], [-1.1, 0.95, 0], 0.02, frameMat));
+  g.add(rod([-0.4, R, 0], [-0.52, 1.12, 0], 0.025, frameMat));
+  g.add(rod([-0.52, 1.12, 0.25], [-0.52, 1.12, -0.25], 0.02, std(0x222222)));
+  g.add(mesh(new THREE.BoxGeometry(0.28, 0.06, 0.14), std(0x222222), -1.12, 1.0, 0));
+  const man = rider(0xffc933, { seated: true, helmet: 0xff5a36 });
+  man.position.set(-1.05, 1.0, 0);
+  g.add(man);
+  g.userData.wheels = [front, back];
+  g.userData.legs = man.userData.legs;
+  g.userData.length = 1.8;
+  return g;
+}
+
+export function createMotorbike() {
+  const g = new THREE.Group();
+  const body = std(0x2255cc, { metalness: 0.5, roughness: 0.3 });
+  const dark = std(0x1d2024, { roughness: 0.6 });
+  const R = 0.33;
+  const front = thinWheel(R, 0.09, 6), back = thinWheel(R, 0.1, 6);
+  front.position.set(-0.4, R, 0);
+  back.position.set(-1.75, R, 0);
+  g.add(front, back);
+  g.add(mesh(rbox(0.9, 0.35, 0.4, 0.12), body, -1.0, 0.85, 0));
+  g.add(mesh(rbox(0.7, 0.14, 0.32, 0.06), dark, -1.5, 0.92, 0));
+  g.add(mesh(rbox(0.6, 0.3, 0.3, 0.1), std(0x9aa0a8, { metalness: 0.8, roughness: 0.3 }), -1.05, 0.55, 0));
+  g.add(rod([-0.4, R, 0], [-0.62, 1.1, 0], 0.035, dark));
+  g.add(rod([-0.62, 1.12, 0.32], [-0.62, 1.12, -0.32], 0.025, dark));
+  g.add(mesh(new THREE.BoxGeometry(0.05, 0.14, 0.2), new THREE.MeshStandardMaterial({ color: 0xfff4d6, emissive: 0xfff4d6, emissiveIntensity: 2 }), -0.52, 1.0, 0, false));
+  g.add(rod([-1.75, R, 0.12], [-1.2, 0.5, 0.18], 0.04, std(0x8a8f96, { metalness: 0.9 })));
+  const man = rider(0x333a44, { seated: true, helmet: 0xf2f2f2 });
+  man.position.set(-1.35, 1.0, 0);
+  g.add(man);
+  g.userData.wheels = [front, back];
+  g.userData.length = 2.1;
+  return g;
+}
+
+export function createPerson(shirt = 0xe0474c) {
+  const g = new THREE.Group();
+  const man = rider(shirt, { seated: false });
+  man.position.set(-0.2, 0.84, 0);
+  g.add(man);
+  g.userData.wheels = [];
+  g.userData.legs = man.userData.legs;
+  g.userData.stride = 1.4;
+  g.userData.length = 0.4;
   return g;
 }
 
 export function rollWheels(vehicle, distance) {
   for (const w of vehicle.userData.wheels) w.rotation.z = -distance / w.userData.radius;
+  const legs = vehicle.userData.legs;
+  if (legs) {
+    const k = vehicle.userData.stride ? (distance / vehicle.userData.stride) * Math.PI : distance / 0.34;
+    const swing = vehicle.userData.stride ? 0.5 * Math.sin(k) : 0;
+    legs.forEach((leg, i) => {
+      leg.rotation.z = vehicle.userData.stride ? (i ? swing : -swing) : -0.9 + 0.45 * Math.sin(k + i * Math.PI);
+    });
+  }
 }
 
 export function setSiren(car, on, time) {
   const s = car.userData.siren;
+  if (!s) return;
   const phase = Math.floor(time * 6) % 2;
   const r = on && phase === 0 ? 1 : 0;
   const b = on && phase === 1 ? 1 : 0;
