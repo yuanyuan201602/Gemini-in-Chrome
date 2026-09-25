@@ -1,73 +1,52 @@
-# Gemini in Chrome
+# 情境化可视化解题
 
-One-click script to enable Chrome's built-in Gemini AI features for non-US users.
+把一道物理题变成真实场景，用 3D 动画一步步演示解题过程，同时同步显示图像（v–t、x–t、投影图）、方程推导，并配有中文语音讲解和字幕，适合课堂大屏演示。
 
-## Quick Start
+学生/老师在网页上**输入题目 → 生成讲解**：Jev 作为第一道关卡判断题型和每个物理量的含义，程序按模板求解、自检，生成讲解脚本，再由 3D 场景播放。完整流程见 [docs/pipeline.md](docs/pipeline.md)。
 
-### macOS / Linux
+## 使用
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/appsail/Gemini-in-Chrome/main/install.sh | bash
+npm install
+npm run build        # 生成 dist/index.html
+npm start            # 启动课堂服务：http://localhost:8787
 ```
 
-### Windows
+- 打开首页就是“输入题目”页；也可点上方“追及问题”“磁聚焦”两道题库示例。
+- **Jev 密钥**：在服务器环境变量里设置 `TYPESAFE_API_KEY`（在 Cursor 云端代理里放到 Dashboard → Cloud Agents → Secrets）。没有密钥时自动使用“本地模拟判断”，页面右上角会标明。
+- **大模型兜底（可选）**：`LLM_API_KEY`、`LLM_MODEL`、`LLM_BASE_URL`（任意 OpenAI 兼容接口），用于还没有模板的题型，生成文字讲解。
+- **离线**：`dist/index.html` 也可直接双击打开，此时整条流程在浏览器里用本地模拟判断运行，不联网也能讲题库和两类模板题。
+- 命令行测试：`npm run solve`（跑全部示例题）或 `npm run solve -- "题目文字"`。
 
-Open PowerShell and run:
+开发：`npm start` 与 `npm run dev` 同时运行，Vite（5173 端口）会把 `/api` 转发到 8787。
 
-```powershell
-irm https://raw.githubusercontent.com/appsail/Gemini-in-Chrome/main/install.ps1 | iex
+操作：`空格` 播放/暂停，`←` `→` 上一步/下一步，`R` 重播本步；3D 画面可拖动旋转、滚轮缩放。勾选“自动连播”可一路讲完。
+语音使用浏览器自带的中文语音；没有中文语音时只显示字幕。
+
+## 已实现的模板
+
+| 模板 | 可变条件 | 场景 | 讲解要点 |
+| --- | --- | --- | --- |
+| 追及（静止匀加速追匀速） | 速度、加速度、反应时间、最大速度（可无）；km/h 自动换算 | 城市道路；按题目换成货车/汽车/自行车/行人、警车/汽车/摩托车；路程牌和图像随数值缩放 | 共速时距离最大；有最大速度时先检验“直接列方程”的错误，再分段 |
+| 磁场中的螺旋线 | B、v、夹角、比荷（或 q、m，或按质子/电子/α 查表）、屏的距离（可无）；正负电荷 | 实验台、真空管、螺线管、荧光屏；螺距过大过小时沿 B 方向按比例缩放并标注 | 速度分解；圆周 + 匀速直线；螺距；屏的位置是否为螺距整数倍；磁聚焦 |
+
+其他题型（平抛、斜面、动量、电场偏转、有界磁场、电磁感应……）已能被识别，但会走“大模型文字讲解”或“老师审核”。
+
+## 结构
+
 ```
-
-## What It Does
-
-1. ✅ Checks if Chrome is running (prompts you to close it)
-2. 💾 Backs up your config (`Local State.bak`)
-3. 🔧 Patches these settings:
-   - `is_glic_eligible`: `false` → `true`
-   - `variations_country`: → `us`
-   - `variations_permanent_consistency_country`: → `us`
-4. ✓ Verifies changes were applied
-
-## Restore Original Config
-
-**macOS:**
-```bash
-mv ~/Library/Application\ Support/Google/Chrome/Local\ State.bak \
-   ~/Library/Application\ Support/Google/Chrome/Local\ State
+src/engine/           解题流程（浏览器和服务器共用）
+  preprocess.js       抽取“数值 + 单位”，换算成国际单位，拆分小问
+  templates.js        模板登记：每个模板的物理量角色、前提条件、对象类型、求解器
+  gate/questions.js   组装发给 Jev 的一次请求（题型 / 角色 / 条件 / 对象）
+  gate/jev.js         Jev 接口（仅服务器端调用）
+  gate/mock.js        本地模拟判断（无密钥或离线时）
+  router.js           置信度门槛 + 量纲一致性 → 走模板 / 兜底 / 审核
+  solvers/            各模板的求解器、自检、讲解脚本（旁白 + 公式 + 动画标记）
+  pipeline.js         串起以上各步，输出结果和流程追踪
+server/               课堂服务：静态页面 + /api/solve，密钥只在这里
+src/problems/         3D 场景：按讲解脚本播放（pursuit、helix、text 文字黑板）
+src/ui/solvePage.js   输入题目页
+src/core/             播放器、3D 舞台、2D 画图、语音
+src/models/           3D 模型：车辆、人物、街道、实验装置
 ```
-
-**Linux:**
-```bash
-mv ~/.config/google-chrome/Local\ State.bak \
-   ~/.config/google-chrome/Local\ State
-```
-
-**Windows PowerShell:**
-```powershell
-Move-Item -Path "$env:LOCALAPPDATA\Google\Chrome\User Data\Local State.bak" `
-          -Destination "$env:LOCALAPPDATA\Google\Chrome\User Data\Local State" -Force
-```
-
-## Safety
-
-- Original config is backed up before any changes
-- Only modifies local Chrome settings
-- No data uploaded, no network access (except downloading the script)
-- Easily reversible
-- Unofficial, open source, use at your own risk
-
-## Config Paths
-
-| OS | Path |
-|----|------|
-| macOS | `~/Library/Application Support/Google/Chrome/Local State` |
-| Linux | `~/.config/google-chrome/Local State` |
-| Windows | `%LOCALAPPDATA%\Google\Chrome\User Data\Local State` |
-
-## Issues
-
-Found a bug? [Open an issue](https://github.com/appsail/Gemini-in-Chrome/issues).
-
-## License
-
-MIT
