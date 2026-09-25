@@ -1,11 +1,6 @@
-# macOS
+node_modules/
+server/logs/
 .DS_Store
-
-# Backup files
-*.bak
-
-# Editor
 .vscode/
 .idea/
 *.swp
-*.swo

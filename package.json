@@ -1,0 +1,22 @@
+{
+  "name": "physics-visualizer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "情境化可视化解题系统：把物理题变成真实场景，用动画、图像和方程一步步讲解",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "start": "node server/index.js",
+    "solve": "node scripts/solve.mjs"
+  },
+  "dependencies": {
+    "katex": "^0.18.9",
+    "three": "^0.186.0"
+  },
+  "devDependencies": {
+    "vite": "^8.3.0",
+    "vite-plugin-singlefile": "^2.3.3"
+  }
+}
